@@ -10,17 +10,6 @@ lapply(libraries, function(x) if (!(x %in% installed.packages())) {
 })
 lapply(libraries, library, quietly = TRUE, character.only = TRUE)
 
-## count number of data points around each grid point
-countdata = function(xdata, xgrid, h) {
-    nsize      = length(xdata)
-    gridlength = length(xgrid)
-    ncount     = rep(0, gridlength)
-    for (i in 1:gridlength) {
-        ncount[i] = sum(ifelse(abs(xdata - xgrid[i]) <= h, 1, 0))
-    }
-    ncount
-}
-
 # Epanechnikov kernel function
 epkernel = function(x) {
     temp = 0.75 * (1 - x * x)
@@ -90,13 +79,12 @@ anodev.logit.chisq = function(y, x, xgrid, h) {
 # a=0 under H0
 a = 0
 
-# a=0 n=200 random set.seed(20120613) a=0 n=100 random design set.seed(20150202)
-# a=0 n=50 random design
-set.seed(20150127)
-
 # sample size 50, 100, 200
 samplen = 50
-Nsim    = 5000
+# number of simulations
+Nsim = 5000
+# fixed equally-spaced design
+xt = seq(0, 1, length = samplen)
 
 # try 7 values of bandwidth, 0.1, 0.12, 0.15, 0.17, 0.2, 0.25, and 0.3
 hlength = 7
@@ -127,26 +115,19 @@ gam.pn  = rep(0, Nsim)
 gam.edf = rep(0, Nsim)
 gam.ts  = rep(0, Nsim)
 
-# range of t set as [0,1]
+
+# a=0 n=50 fixed design xtequally-spaced
+set.seed(2015012710)
+
+# a=0 n=100 fixed design x equally-spaced set.seed(2012061310)
+
+# a=0 n=200 fixed design x equally-spaced set.seed(2015012810)
+
 tgrid = seq(0, 1, 0.005)  #length 201
 
 for (j in 1:Nsim) {
-    
-    # random design check if every neighborhood has at least 3 points at smallest h
-
-    checkdata = rep(0, length(tgrid))
-    
-    while (any(checkdata <= 2)) {
-        xt      = c(runif((samplen - 2)), 0, 1)
-        t.range = max(xt) - min(xt)
-        
-        # check if there is sufficient data around each grid point when h=0.1
-        
-        checkdata = countdata(xt, tgrid, 0.1)
-        # print(any(checkdata<=2))
-    }
-    
-    beta0     = -1
+    beta0 = -1
+    # under H0
     eta       = beta0 + a * cos(2 * pi * xt)
     p0        = exp(eta)/(1 + exp(eta))
     y0        = as.integer(rbinom(samplen, 1, p0))
@@ -155,7 +136,6 @@ for (j in 1:Nsim) {
     names(d4) = c("xt", "y0")
     hchoice   = c(0.1, 0.12, 0.15, 0.17, 0.2, 0.25, 0.3)
     AICcmin   = 10
-    
     for (hi in 1:hlength) {
         h = hchoice[hi]
         
@@ -176,7 +156,6 @@ for (j in 1:Nsim) {
             AICcmin  = AICc[j, hi]
             AICch[j] = h
         }
-        
         # proposed chi-square test statistic p-value
         pvalue[j, hi] = 1 - pchisq(chi.teststat[j, hi], (degfee[j, hi] - 1))
         
@@ -188,7 +167,6 @@ for (j in 1:Nsim) {
         
     }
     # end hi bandiwdth
-    
     findaicc      = (hchoice == AICch[j])
     AICcpvalue[j] = pvalue[j, findaicc]
     
@@ -204,6 +182,7 @@ for (j in 1:Nsim) {
     
 }
 # j loop
+
 
 testresults1 = round(matrix(c(hchoice, colSums(pvalue <= 0.05)/Nsim), nrow = 2, ncol = 7, 
     byrow = TRUE), 6)
@@ -228,4 +207,3 @@ print(sum(gam.p1 <= 0.05))/Nsim
 print(sum(gam.pn <= 0.05))
 print(summary(gam.edf))
 print(sqrt(var(gam.edf)))
-

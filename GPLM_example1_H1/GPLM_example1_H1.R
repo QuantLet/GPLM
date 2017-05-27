@@ -12,9 +12,9 @@ lapply(libraries, library, quietly = TRUE, character.only = TRUE)
 
 ## count number of data points around each grid point
 countdata = function(xdata, xgrid, h) {
-    nsize      = length(xdata)
+    nsize = length(xdata)
     gridlength = length(xgrid)
-    ncount     = rep(0, gridlength)
+    ncount = rep(0, gridlength)
     for (i in 1:gridlength) {
         ncount[i] = sum(ifelse(abs(xdata - xgrid[i]) <= h, 1, 0))
     }
@@ -53,7 +53,7 @@ proj.ep.symmetric = function(x, xgrid, h) {
     defree     = sum(diag(localproj))
     list(Hstar = localproj, defree = defree)
 }
-## analysis of deviance function 
+## analysis of deviance function
 ## using Epanechnikov kernel, xgrid must be equally spaced testing no effect of x
 anodev.logit.chisq = function(y, x, xgrid, h) {
     gridlength = length(xgrid)
@@ -87,15 +87,16 @@ anodev.logit.chisq = function(y, x, xgrid, h) {
     
 }
 
-# a=0 under H0
-a = 0
+# under H1, a=0.5, 0.75, 1
+a = 0.5
+set.seed(20150130)
+# a=0.5 n=100 set.seed(20150130) a=0.5 n=200 set.seed(201206225)
 
-# a=0 n=200 random set.seed(20120613) a=0 n=100 random design set.seed(20150202)
-# a=0 n=50 random design
-set.seed(20150127)
+# a=0.75 a=0.75 n=100 set.seed(201501302) a=0.75 n=200 set.seed(201205255)
 
-# sample size 50, 100, 200
-samplen = 50
+# a=1.0 a=1.0 n=100 set.seed(150131) a=1.0 n=200 set.seed(201204255)
+
+samplen = 100
 Nsim    = 5000
 
 # try 7 values of bandwidth, 0.1, 0.12, 0.15, 0.17, 0.2, 0.25, and 0.3
@@ -127,17 +128,18 @@ gam.pn  = rep(0, Nsim)
 gam.edf = rep(0, Nsim)
 gam.ts  = rep(0, Nsim)
 
+
 # range of t set as [0,1]
 tgrid = seq(0, 1, 0.005)  #length 201
 
 for (j in 1:Nsim) {
     
     # random design check if every neighborhood has at least 3 points at smallest h
-
+    
     checkdata = rep(0, length(tgrid))
     
     while (any(checkdata <= 2)) {
-        xt      = c(runif((samplen - 2)), 0, 1)
+        xt = c(runif((samplen - 2)), 0, 1)
         t.range = max(xt) - min(xt)
         
         # check if there is sufficient data around each grid point when h=0.1
@@ -155,7 +157,6 @@ for (j in 1:Nsim) {
     names(d4) = c("xt", "y0")
     hchoice   = c(0.1, 0.12, 0.15, 0.17, 0.2, 0.25, 0.3)
     AICcmin   = 10
-    
     for (hi in 1:hlength) {
         h = hchoice[hi]
         
@@ -176,7 +177,6 @@ for (j in 1:Nsim) {
             AICcmin  = AICc[j, hi]
             AICch[j] = h
         }
-        
         # proposed chi-square test statistic p-value
         pvalue[j, hi] = 1 - pchisq(chi.teststat[j, hi], (degfee[j, hi] - 1))
         
@@ -205,6 +205,9 @@ for (j in 1:Nsim) {
 }
 # j loop
 
+print(samplen)
+print("random")
+
 testresults1 = round(matrix(c(hchoice, colSums(pvalue <= 0.05)/Nsim), nrow = 2, ncol = 7, 
     byrow = TRUE), 6)
 testresults1
@@ -212,6 +215,7 @@ testresults2 = round(matrix(c(mean(AICch), sd(AICch), sum(AICcpvalue < 0.05)/Nsi
     mean(adaptiveh), sd(adaptiveh), sum(adaptivepvalue < 0.05)/Nsim), nrow = 2, byrow = TRUE), 
     6)
 testresults2
+
 
 degresults = round(matrix(c(mean(degfee[, 1]), sd(degfee[, 1]), mean(degfee[, 2]), 
     sd(degfee[, 2]), mean(degfee[, 3]), sd(degfee[, 3]), mean(degfee[, 4]), sd(degfee[, 
@@ -223,9 +227,9 @@ print(table(AICch))
 print(table(adaptiveh))
 
 print("gam")
+print("n=")
 print(sum(gam.p0 <= 0.05))/Nsim
 print(sum(gam.p1 <= 0.05))/Nsim
 print(sum(gam.pn <= 0.05))
 print(summary(gam.edf))
 print(sqrt(var(gam.edf)))
-
