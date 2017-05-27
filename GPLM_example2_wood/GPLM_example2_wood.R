@@ -10,7 +10,6 @@ lapply(libraries, function(x) if (!(x %in% installed.packages())) {
 })
 lapply(libraries, library, quietly = TRUE, character.only = TRUE)
 
-
 # count number of data points around each grid point 
 countdata=function(xdata, xgrid, h)
 { 
@@ -151,7 +150,6 @@ tgrid <- seq(0.0, 1.0, 0.005) #length 201
 for (j in 1:Nsim) {
   
   ########## random design check if every neighborhood has at least 3 points at smallest h #############
-  
   checkdata<- rep(0, length(tgrid))
   
   while (any(checkdata<=2))
@@ -242,8 +240,8 @@ print(samplen)
 print("random")
 
 testresults1<- round(matrix(c(hchoice, colSums(pvalue<=0.05)/Nsim),nrow=2,ncol=7, byrow=TRUE),6); testresults1
-testresults2<-  round(matrix(c(mean(AICch), sd(AICch), sum(AICcpvalue<0.05)/Nsim, mean(adaptiveh), sd(adaptiveh), sum(adaptivepvalue<0.05)/Nsim),nrow=2,byrow=TRUE),6);testresults2
-
+testresults2<-  round(matrix(c(mean(AICch), sd(AICch), sum(AICcpvalue<0.05)/Nsim, mean(adaptiveh), sd(adaptiveh), 
+                               sum(adaptivepvalue<0.05)/Nsim),nrow=2,byrow=TRUE),6);testresults2
 
 degresults<-  round(matrix(c(mean(degfee[,1]), sd(degfee[,1]), mean(degfee[,2]), sd(degfee[,2]),
                              mean(degfee[,3]), sd(degfee[,3]), mean(degfee[,4]), sd(degfee[,4]),
@@ -252,7 +250,6 @@ degresults<-  round(matrix(c(mean(degfee[,1]), sd(degfee[,1]), mean(degfee[,2]),
 
 print(table(AICch))
 print(table(adaptiveh))
-
 
 print("gam")
 print(sum(gam.p0<=0.05))/Nsim
